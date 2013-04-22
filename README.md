@@ -1,17 +1,18 @@
-Sanscript
+Sanscript.php
 =============================
 
 Introduction
 -----------------------------
-Sanscript is a transliteration library for Indian languages. It supports the most popular Indian scripts and several different romanization schemes. Although Sanscript focuses on Sanskrit transliteration, it has partial support for other languages and is easy to extend.
+Sanscript.php is a transliteration library for Indian languages written in PHP. It supports the most popular Indian scripts and several different romanization schemes. Although Sanscript focuses on Sanskrit transliteration, it has partial support for other languages and is easy to extend.
 
 Usage
 -----------------------------
 Sanscript is simple to use:
 
-    var output = Sanscript.t(input, from, to);
+    $sanscript = new Sanscript();
+    $output = $sanscript->t($input, $from, $to);
 
-Here, `from` and `to` are the names of different **schemes**. In Sanscript, the word "scheme" refers to both scripts and romanizations. These schemes are of two types:
+Here, `$from` and `$to` are the names of different **schemes**. In Sanscript, the word "scheme" refers to both scripts and romanizations. These schemes are of two types:
 
 1. **Brahmic** schemes, which are *abugidas*. All Indian scripts are Brahmic schemes.
 2. **Roman** schemes, which are *alphabets*. All romanizations are Roman schemes.
@@ -42,32 +43,32 @@ and the following Roman schemes:
 ### Disabling transliteration
 When Sanscript sees the token `##`, it toggles the transliteration state:
 
-    Sanscript.t('ga##Na##pa##te', 'hk', 'devanagari'); // गNaपte
-    Sanscript.t('ध##र्म##क्षेत्रे', 'devanagari', 'hk'); // dhaर्मkSetre
+    $sanscript->t('ga##Na##pa##te', 'hk', 'devanagari'); // गNaपte
+    $sanscript->t('ध##र्म##क्षेत्रे', 'devanagari', 'hk'); // dhaर्मkSetre
 
 When Sanscript sees the token `\`, it disables transliteration on the character that immediately follows. `\` is used for ITRANS compatibility; we recommend always using `##` instead.
 
-    Sanscript.t('a \\a', 'itrans', 'devanagari'); // अ a
-    Sanscript.t('\\##aham', 'itrans', 'devanagari'); // ##अहम्
+    $sanscript->t('a \\a', 'itrans', 'devanagari'); // अ a
+    $sanscript->t('\\##aham', 'itrans', 'devanagari'); // ##अहम्
 
 ### Transliterating to lossy schemes
 A **lossy** scheme does not have the letters needed to support lossless translation. For example, Bengali is a lossy scheme because it uses `ব` for both `ba` and `va`. In future releases, Sanscript might let you choose how to handle lossiness. For the time being, it makes some fairly bad hard-coded assumptions. Corrections and advice are always welcome.
 
 ### Transliteration options
-You can tweak the transliteration function by passing an `options` object:
+You can tweak the transliteration function by passing an `options` array:
 
-    var output = Sanscript.t(input, from, to, options);
-    
-`options` maps options to values. Currently, these options are supported:
+    $output = $sanscript->t($input, $from, $to, $options);
 
-* `skip_sgml` - If true, transliterate SGML tags as if they were ordinary words (`<b>iti</b>` → `<ब्>इति</ब्>`). Defaults to `false`.
-* `syncope` - If true, use Hindi-style transliteration (`ajay` → `अजय`). In linguistics, this behavior is known as [schwa syncope](http://en.wikipedia.org/wiki/Schwa_deletion_in_Indo-Aryan_languages). Defaults to `false`.
+`$options` maps options to values. Currently, these options are supported:
+
+* `skip_sgml` - If TRUE, transliterate SGML tags as if they were ordinary words (`<b>iti</b>` → `<ब्>इति</ब्>`). Defaults to `FALSE`.
+* `syncope` - If TRUE, use Hindi-style transliteration (`ajay` → `अजय`). In linguistics, this behavior is known as [schwa syncope](http://en.wikipedia.org/wiki/Schwa_deletion_in_Indo-Aryan_languages). Defaults to `FALSE`.
 
 Adding new schemes
 -----------------------------
 Adding a new scheme is simple:
 
-    Sanscript.addBrahmicScheme(schemeName, schemeData);
-    Sanscript.addRomanScheme(schemeName, schemeData);
+    $sanscript->addBrahmicScheme($schemeName, $schemeData);
+    $sanscript->addRomanScheme($schemeName, $schemeData);
 
-For help in creating `schemeData`, see the comments on the `addBrahmicScheme` and `addRomanScheme` functions.
+For help in creating `$schemeData`, see the comments on the `addBrahmicScheme` and `addRomanScheme` functions.
