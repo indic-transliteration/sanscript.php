@@ -681,7 +681,7 @@ class Sanscript {
         }
 
         if ($hasPriorState) {
-            $map = &$this->cache['map'];
+            $map = $this->cache['map'];
         } else {
             $map = $this->makeMap($from, $to, $options);
             $this->cache = array(
