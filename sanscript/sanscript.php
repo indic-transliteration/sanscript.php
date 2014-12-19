@@ -655,7 +655,7 @@ class Sanscript {
      *
      * @param $data     the string to transliterate
      * @param $from     the source script
-     * @param $to       the the destination script
+     * @param $to       the destination script
      * @param $options  transliteration options
      * @return          the finished string
      */
