@@ -17,5 +17,6 @@ class SanscriptOptions extends SanscriptBase {
         $f1('<p>nara iti</p>', '<प्>नर इति</प्>');
         $f2('<p>nara iti</p>', '<प्>नर इति</प्>');
         $f3('<p>nara iti</p>', '<p>नर इति</p>');
+        $f3('##<p>nara iti</p>', '<p>nara iti</p>');
     }
 }

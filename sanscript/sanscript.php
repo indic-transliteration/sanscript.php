@@ -515,13 +515,26 @@ class Sanscript {
         $letters = &$map['letters'];
         $marks = &$map['marks'];
         $maxTokenLength = &$map['maxTokenLength'];
+        $optSkipSGML = $options['skip_sgml'];
         $optSyncope = $options['syncope'];
         $tokenBuffer = '';
         $toRoman = &$map['toRoman'];
-        $transliterationEnabled = TRUE;
         $virama = &$map['virama'];
         $dataChars = preg_split('//u', $data, -1, PREG_SPLIT_NO_EMPTY);
         $dataLength = count($dataChars);
+
+        // Transliteration state. It's controlled by these values:
+        // - `$skippingSGML`: are we in SGML?
+        // - `$toggledTrans`: are we in a toggled region?
+        //
+        // We combine these values into a single variable `$skippingTrans`:
+        //
+        // `$skippingTrans` = $skippingSGML || $toggledTrans;
+        //
+        // If (and only if) this value is true, don't transliterate.
+        $skippingSGML = FALSE;
+        $skippingTrans = FALSE;
+        $toggledTrans = FALSE;
 
         for ($i = 0; (($i < $dataLength) && (($L = $dataChars[$i]) || TRUE)) || $tokenBuffer; $i++) {
             // Fill the token buffer, if possible.
@@ -537,12 +550,17 @@ class Sanscript {
             for ($j = 0; $j < $maxTokenLength; $j++) {
                 $token = mb_substr_fixed($tokenBuffer, 0, $maxTokenLength - $j, 'UTF-8');
 
-                if ($token === '##') {
-                    $transliterationEnabled = !$transliterationEnabled;
+                if ($skippingSGML) {
+                    $skippingSGML = ($token !== '>');
+                } else if ($token === '<') {
+                    $skippingSGML = $optSkipSGML;
+                } else if ($token === '##') {
+                    $toggledTrans = !$toggledTrans;
                     $tokenBuffer = mb_substr_fixed($tokenBuffer, 2, NULL, 'UTF-8');
                     break;
                 }
-                if (isset($letters[$token]) && $transliterationEnabled) {
+                $skippingTrans = $skippingSGML || $toggledTrans;
+                if (isset($letters[$token]) && !$skippingTrans) {
                     if ($toRoman) {
                       $buf[] = $letters[$token];
                     } else {
