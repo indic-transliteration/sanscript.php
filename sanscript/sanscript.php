@@ -731,7 +731,7 @@ class Sanscript {
  * @see http://us.php.net/ChangeLog-5.php
  */
 function mb_substr_fixed ($str , $start, $length, $encoding) {
-    if (PHP_VERSION_ID <= 50408) {
+    if (version_compare(PHP_VERSION, '5.4.8', '<')) {
         return mb_substr($str, $start, is_null($length) ? mb_strlen($str) : $length, $encoding);
     }
     else {
