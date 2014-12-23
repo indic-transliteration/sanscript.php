@@ -617,14 +617,14 @@ class Sanscript {
         $letters = &$map['letters'];
         $marks = &$map['marks'];
         $toRoman = &$map['toRoman'];
-        $transliterationEnabled = TRUE;
+        $skippingTrans = FALSE;
         $dataChars = preg_split('//u', $data, -1, PREG_SPLIT_NO_EMPTY);
 
         foreach ($dataChars as $L) {
             // Toggle transliteration state
             if ($L === '#') {
                 if ($danglingHash) {
-                    $transliterationEnabled = !$transliterationEnabled;
+                    $skippingTrans = !$skippingTrans;
                     $danglingHash = FALSE;
                 } else {
                     $danglingHash = TRUE;
@@ -634,7 +634,7 @@ class Sanscript {
                     $hadRomanConsonant = FALSE;
                 }
                 continue;
-            } else if (!$transliterationEnabled) {
+            } else if ($skippingTrans) {
                 $buf[] = $L;
                 continue;
             }
