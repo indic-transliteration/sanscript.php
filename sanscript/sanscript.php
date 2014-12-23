@@ -710,10 +710,6 @@ class Sanscript {
             );
         }
 
-        if ($options['skip_sgml']) {
-            $data = preg_replace('/(<.*?>)/u', "##$1##", $data);
-        }
-
         // Easy way out for "{\m+}", "\", and ".h".
         if ($from === 'itrans') {
             $data = preg_replace("/\{\\\m\+\}/u", ".h.N", $data);
