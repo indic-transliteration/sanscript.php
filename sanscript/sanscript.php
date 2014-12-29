@@ -536,11 +536,11 @@ class Sanscript {
         $skippingTrans = FALSE;
         $toggledTrans = FALSE;
 
-        for ($i = 0; (($i < $dataLength) && (($L = $dataChars[$i]) || TRUE)) || $tokenBuffer; $i++) {
+        for ($i = 0; ($i < $dataLength || $tokenBuffer); $i++) {
             // Fill the token buffer, if possible.
             $difference = $maxTokenLength - mb_strlen($tokenBuffer, 'UTF-8');
             if ($difference > 0 && $i < $dataLength) {
-                $tokenBuffer .= $L;
+                $tokenBuffer .= $dataChars[$i];
                 if ($difference > 1) {
                     continue;
                 }
