@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Sanscript
  *
@@ -7,334 +8,335 @@
  *
  * Released under the MIT and GPL Licenses.
  */
-
 class Sanscript {
+
     // Transliteration process option defaults.
-    public $defaults;
-    // Set of all transliteration schemes.
-    public $schemes;
-    // Set of names of Roman schemes.
-    private $romanSchemes;
-    // Map of alternate encodings.
-    private $allAlternates;
-    // Object cache.
-    private $cache;
+    public $defaults = array(
+        "skip_sgml" => FALSE,
+        "syncope" => FALSE
+    );
 
-    private function initializeVariables() {
-        $this->defaults = array(
-            "skip_sgml" => FALSE,
-            "syncope" => FALSE
-        );
+    /* Schemes
+     * =======
+     * Schemes are of two kinds: "Brahmic" and "roman." "Brahmic" schemes
+     * describe abugida scripts found in India. "Roman" schemes describe
+     * manufactured alphabets that are meant to describe or encode Brahmi
+     * scripts. Abugidas and alphabets are processed by separate algorithms
+     * because of the unique difficulties involved with each.
+     *
+     * Brahmic consonants are stated without a virama. Roman consonants are
+     * stated without the vowel 'a'.
+     *
+     * (Since "abugida" is not a well-known term, Sanscript uses "Brahmic"
+     * and "roman" for clarity.)
+     */
+    public $schemes = array(
 
-        /* Schemes
-         * =======
-         * Schemes are of two kinds: "Brahmic" and "roman." "Brahmic" schemes
-         * describe abugida scripts found in India. "Roman" schemes describe
-         * manufactured alphabets that are meant to describe or encode Brahmi
-         * scripts. Abugidas and alphabets are processed by separate algorithms
-         * because of the unique difficulties involved with each.
-         *
-         * Brahmic consonants are stated without a virama. Roman consonants are
-         * stated without the vowel 'a'.
-         *
-         * (Since "abugida" is not a well-known term, Sanscript uses "Brahmic"
-         * and "roman" for clarity.)
+        /* Bengali
+         * -------
+         * 'va' and 'ba' are both rendered as ব.
          */
-        $this->schemes = array(
+        "bengali" => array(
+            "vowels" => array("অ", "আ", "ই", "ঈ", "উ", "ঊ", "ঋ", "ৠ", "ঌ", "ৡ", "", "এ", "ঐ", "", "ও", "ঔ"),
+            "vowel_marks" => array("া", "ি", "ী", "ু", "ূ", "ৃ", "ৄ", "ৢ", "ৣ", "", "ে", "ৈ", "", "ো", "ৌ"),
+            "other_marks" => array("ং", "ঃ", "ঁ"),
+            "virama" => array("্"),
+            "consonants" => array("ক", "খ", "গ", "ঘ", "ঙ", "চ", "ছ", "জ", "ঝ", "ঞ", "ট", "ঠ", "ড", "ঢ", "ণ", "ত", "থ", "দ", "ধ", "ন", "প", "ফ", "ব", "ভ", "ম", "য", "র", "ল", "ব", "শ", "ষ", "স", "হ", "ळ", "ক্ষ", "জ্ঞ"),
+            "symbols" => array("০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯", "ॐ", "ঽ", "।", "॥"),
+            "other" => array("", "", "", "", "ড", "ঢ", "", "য", "")
+        ),
 
-            /* Bengali
-             * -------
-             * 'va' and 'ba' are both rendered as ব.
-             */
-            "bengali" => array(
-                "vowels" => array("অ", "আ", "ই", "ঈ", "উ", "ঊ", "ঋ", "ৠ", "ঌ", "ৡ", "", "এ", "ঐ", "", "ও", "ঔ"),
-                "vowel_marks" => array("া", "ি", "ী", "ু", "ূ", "ৃ", "ৄ", "ৢ", "ৣ", "", "ে", "ৈ", "", "ো", "ৌ"),
-                "other_marks" => array("ং", "ঃ", "ঁ"),
-                "virama" => array("্"),
-                "consonants" => array("ক", "খ", "গ", "ঘ", "ঙ", "চ", "ছ", "জ", "ঝ", "ঞ", "ট", "ঠ", "ড", "ঢ", "ণ", "ত", "থ", "দ", "ধ", "ন", "প", "ফ", "ব", "ভ", "ম", "য", "র", "ল", "ব", "শ", "ষ", "স", "হ", "ळ", "ক্ষ", "জ্ঞ"),
-                "symbols" => array("০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯", "ॐ", "ঽ", "।", "॥"),
-                "other" => array("", "", "", "", "ড", "ঢ", "", "য", "")
-            ),
+        /* Devanagari
+         * ----------
+         * The most comprehensive and unambiguous Brahmic script listed.
+         */
+        "devanagari" => array(
+            // "Independent" forms of the vowels. These are used whenever the
+            // vowel does not immediately follow a consonant.
+            "vowels" => array("अ", "आ", "इ", "ई", "उ", "ऊ", "ऋ", "ॠ", "ऌ", "ॡ", "ऎ", "ए", "ऐ", "ऒ", "ओ", "औ"),
 
-            /* Devanagari
-             * ----------
-             * The most comprehensive and unambiguous Brahmic script listed.
-             */
-            "devanagari" => array(
-                // "Independent" forms of the vowels. These are used whenever the
-                // vowel does not immediately follow a consonant.
-                "vowels" => array("अ", "आ", "इ", "ई", "उ", "ऊ", "ऋ", "ॠ", "ऌ", "ॡ", "ऎ", "ए", "ऐ", "ऒ", "ओ", "औ"),
+            // "Dependent" forms of the vowels. These are used whenever the
+            // vowel immediately follows a consonant. If a letter is not
+            // listed in `vowels`, it should not be listed here.
+            "vowel_marks" => array("ा", "ि", "ी", "ु", "ू", "ृ", "ॄ", "ॢ", "ॣ", "ॆ", "े", "ै", "ॊ", "ो", "ौ"),
 
-                // "Dependent" forms of the vowels. These are used whenever the
-                // vowel immediately follows a consonant. If a letter is not
-                // listed in `vowels`, it should not be listed here.
-                "vowel_marks" => array("ा", "ि", "ी", "ु", "ू", "ृ", "ॄ", "ॢ", "ॣ", "ॆ", "े", "ै", "ॊ", "ो", "ौ"),
+            // Miscellaneous marks, all of which are used in Sanskrit.
+            "other_marks" => array("ं", "ः", "ँ"),
 
-                // Miscellaneous marks, all of which are used in Sanskrit.
-                "other_marks" => array("ं", "ः", "ँ"),
+            // In syllabic scripts like Devanagari, consonants have an inherent
+            // vowel that must be suppressed explicitly. We do so by putting a
+            // virama after the consonant.
+            "virama" => array("्"),
 
-                // In syllabic scripts like Devanagari, consonants have an inherent
-                // vowel that must be suppressed explicitly. We do so by putting a
-                // virama after the consonant.
-                "virama" => array("्"),
+            // Various Sanskrit consonants and consonant clusters. Every token
+            // here has an explicit vowel. Thus "क" is "ka" instead of "k".
+            "consonants" => array("क", "ख", "ग", "घ", "ङ", "च", "छ", "ज", "झ", "ञ", "ट", "ठ", "ड", "ढ", "ण", "त", "थ", "द", "ध", "न", "प", "फ", "ब", "भ", "म", "य", "र", "ल", "व", "श", "ष", "स", "ह", "ळ", "क्ष", "ज्ञ"),
 
-                // Various Sanskrit consonants and consonant clusters. Every token
-                // here has an explicit vowel. Thus "क" is "ka" instead of "k".
-                "consonants" => array("क", "ख", "ग", "घ", "ङ", "च", "छ", "ज", "झ", "ञ", "ट", "ठ", "ड", "ढ", "ण", "त", "थ", "द", "ध", "न", "प", "फ", "ब", "भ", "म", "य", "र", "ल", "व", "श", "ष", "स", "ह", "ळ", "क्ष", "ज्ञ"),
+            // Numbers and punctuation
+            "symbols" => array("०", "१", "२", "३", "४", "५", "६", "७", "८", "९", "ॐ", "ऽ", "।", "॥"),
 
-                // Numbers and punctuation
-                "symbols" => array("०", "१", "२", "३", "४", "५", "६", "७", "८", "९", "ॐ", "ऽ", "।", "॥"),
+            // Zero-width joiner. This is used to separate a consonant cluster
+            // and avoid a complex ligature.
+            "zwj" => array("\u200D"),
 
-                // Zero-width joiner. This is used to separate a consonant cluster
-                // and avoid a complex ligature.
-                "zwj" => json_decode('["\u200D"]'),
+            // Dummy consonant. This is used in ITRANS to prevert certain types
+            // of parser ambiguity. Thus "barau" -> बरौ but "bara_u" -> बरउ.
+            "skip" => array(""),
 
-                // Dummy consonant. This is used in ITRANS to prevert certain types
-                // of parser ambiguity. Thus "barau" -> बरौ but "bara_u" -> बरउ.
-                "skip" => array(""),
+            // Vedic accent. Udatta and anudatta.
+            "accent" => array("\u0951", "\u0952"),
 
-                // Vedic accent. Udatta and anudatta.
-                "accent" => json_decode('["\u0951", "\u0952"]'),
+            // Accent combined with anusvara and and visarga. For compatibility
+            // with ITRANS, which allows the reverse of these four.
+            "combo_accent" => array("ः॑", "ः॒", "ं॑", "ं॒"),
 
-                // Accent combined with anusvara and and visarga. For compatibility
-                // with ITRANS, which allows the reverse of these four.
-                "combo_accent" => array("ः॑", "ः॒", "ं॑", "ं॒"),
+            "candra" => array("ॅ"),
 
-                "candra" => array("ॅ"),
+            // Non-Sanskrit consonants
+            "other" => array("क़", "ख़", "ग़", "ज़", "ड़", "ढ़", "फ़", "य़", "ऱ")
+        ),
 
-                // Non-Sanskrit consonants
-                "other" => array("क़", "ख़", "ग़", "ज़", "ड़", "ढ़", "फ़", "य़", "ऱ")
-            ),
+        /* Gujarati
+         * --------
+         * Sanskrit-complete.
+         */
+        "gujarati" => array(
+            "vowels" => array("અ", "આ", "ઇ", "ઈ", "ઉ", "ઊ", "ઋ", "ૠ", "ઌ", "ૡ", "", "એ", "ઐ", "", "ઓ", "ઔ"),
+            "vowel_marks" => array("ા", "િ", "ી", "ુ", "ૂ", "ૃ", "ૄ", "ૢ", "ૣ", "", "ે", "ૈ", "", "ો", "ૌ"),
+            "other_marks" => array("ં", "ઃ", "ઁ"),
+            "virama" => array("્"),
+            "consonants" => array("ક", "ખ", "ગ", "ઘ", "ઙ", "ચ", "છ", "જ", "ઝ", "ઞ", "ટ", "ઠ", "ડ", "ઢ", "ણ", "ત", "થ", "દ", "ધ", "ન", "પ", "ફ", "બ", "ભ", "મ", "ય", "ર", "લ", "વ", "શ", "ષ", "સ", "હ", "ળ", "ક્ષ", "જ્ઞ"),
+            "symbols" => array("૦", "૧", "૨", "૩", "૪", "૫", "૬", "૭", "૮", "૯", "ૐ", "ઽ", "૤", "૥"),
+            "candra" => array("ૅ")
+        ),
 
-            /* Gujarati
-             * --------
-             * Sanskrit-complete.
-             */
-            "gujarati" => array(
-                "vowels" => array("અ", "આ", "ઇ", "ઈ", "ઉ", "ઊ", "ઋ", "ૠ", "ઌ", "ૡ", "", "એ", "ઐ", "", "ઓ", "ઔ"),
-                "vowel_marks" => array("ા", "િ", "ી", "ુ", "ૂ", "ૃ", "ૄ", "ૢ", "ૣ", "", "ે", "ૈ", "", "ો", "ૌ"),
-                "other_marks" => array("ં", "ઃ", "ઁ"),
-                "virama" => array("્"),
-                "consonants" => array("ક", "ખ", "ગ", "ઘ", "ઙ", "ચ", "છ", "જ", "ઝ", "ઞ", "ટ", "ઠ", "ડ", "ઢ", "ણ", "ત", "થ", "દ", "ધ", "ન", "પ", "ફ", "બ", "ભ", "મ", "ય", "ર", "લ", "વ", "શ", "ષ", "સ", "હ", "ળ", "ક્ષ", "જ્ઞ"),
-                "symbols" => array("૦", "૧", "૨", "૩", "૪", "૫", "૬", "૭", "૮", "૯", "ૐ", "ઽ", "૤", "૥"),
-                "candra" => array("ૅ")
-            ),
+        /* Gurmukhi
+         * --------
+         * Missing R/RR/lR/lRR
+         */
+        "gurmukhi" => array(
+            "vowels" => array("ਅ", "ਆ", "ਇ", "ਈ", "ਉ", "ਊ", "", "", "", "", "", "ਏ", "ਐ", "", "ਓ", "ਔ"),
+            "vowel_marks" => array("ਾ", "ਿ", "ੀ", "ੁ", "ੂ", "", "", "", "", "", "ੇ", "ੈ", "", "ੋ", "ੌ"),
+            "other_marks" => array("ਂ", "ਃ", "ਁ"),
+            "virama" => array("੍"),
+            "consonants" => array("ਕ", "ਖ", "ਗ", "ਘ", "ਙ", "ਚ", "ਛ", "ਜ", "ਝ", "ਞ", "ਟ", "ਠ", "ਡ", "ਢ", "ਣ", "ਤ", "ਥ", "ਦ", "ਧ", "ਨ", "ਪ", "ਫ", "ਬ", "ਭ", "ਮ", "ਯ", "ਰ", "ਲ", "ਵ", "ਸ਼", "ਸ਼", "ਸ", "ਹ", "ਲ਼", "ਕ੍ਸ਼", "ਜ੍ਞ"),
+            "symbols" => array("੦", "੧", "੨", "੩", "੪", "੫", "੬", "੭", "੮", "੯", "ॐ", "ऽ", "।", "॥"),
+            "other" => array("", "ਖ", "ਗ", "ਜ", "ਡ", "", "ਫ", "", "")
+        ),
 
-            /* Gurmukhi
-             * --------
-             * Missing R/RR/lR/lRR
-             */
-            "gurmukhi" => array(
-                "vowels" => array("ਅ", "ਆ", "ਇ", "ਈ", "ਉ", "ਊ", "", "", "", "", "", "ਏ", "ਐ", "", "ਓ", "ਔ"),
-                "vowel_marks" => array("ਾ", "ਿ", "ੀ", "ੁ", "ੂ", "", "", "", "", "", "ੇ", "ੈ", "", "ੋ", "ੌ"),
-                "other_marks" => array("ਂ", "ਃ", "ਁ"),
-                "virama" => array("੍"),
-                "consonants" => array("ਕ", "ਖ", "ਗ", "ਘ", "ਙ", "ਚ", "ਛ", "ਜ", "ਝ", "ਞ", "ਟ", "ਠ", "ਡ", "ਢ", "ਣ", "ਤ", "ਥ", "ਦ", "ਧ", "ਨ", "ਪ", "ਫ", "ਬ", "ਭ", "ਮ", "ਯ", "ਰ", "ਲ", "ਵ", "ਸ਼", "ਸ਼", "ਸ", "ਹ", "ਲ਼", "ਕ੍ਸ਼", "ਜ੍ਞ"),
-                "symbols" => array("੦", "੧", "੨", "੩", "੪", "੫", "੬", "੭", "੮", "੯", "ॐ", "ऽ", "।", "॥"),
-                "other" => array("", "ਖ", "ਗ", "ਜ", "ਡ", "", "ਫ", "", "")
-            ),
+        /* Kannada
+         * -------
+         * Sanskrit-complete.
+         */
+        "kannada" => array(
+            "vowels" => array("ಅ", "ಆ", "ಇ", "ಈ", "ಉ", "ಊ", "ಋ", "ೠ", "ಌ", "ೡ", "ಎ", "ಏ", "ಐ", "ಒ", "ಓ", "ಔ"),
+            "vowel_marks" => array("ಾ", "ಿ", "ೀ", "ು", "ೂ", "ೃ", "ೄ", "ೢ", "ೣ", "ೆ", "ೇ", "ೈ", "ೊ", "ೋ", "ೌ"),
+            "other_marks" => array("ಂ", "ಃ", "ँ"),
+            "virama" => array("್"),
+            "consonants" => array("ಕ", "ಖ", "ಗ", "ಘ", "ಙ", "ಚ", "ಛ", "ಜ", "ಝ", "ಞ", "ಟ", "ಠ", "ಡ", "ಢ", "ಣ", "ತ", "ಥ", "ದ", "ಧ", "ನ", "ಪ", "ಫ", "ಬ", "ಭ", "ಮ", "ಯ", "ರ", "ಲ", "ವ", "ಶ", "ಷ", "ಸ", "ಹ", "ಳ", "ಕ್ಷ", "ಜ್ಞ"),
+            "symbols" => array("೦", "೧", "೨", "೩", "೪", "೫", "೬", "೭", "೮", "೯", "ಓಂ", "ಽ", "।", "॥"),
+            "other" => array("", "", "", "", "", "", "ಫ", "", "ಱ")
+        ),
 
-            /* Kannada
-             * -------
-             * Sanskrit-complete.
-             */
-            "kannada" => array(
-                "vowels" => array("ಅ", "ಆ", "ಇ", "ಈ", "ಉ", "ಊ", "ಋ", "ೠ", "ಌ", "ೡ", "ಎ", "ಏ", "ಐ", "ಒ", "ಓ", "ಔ"),
-                "vowel_marks" => array("ಾ", "ಿ", "ೀ", "ು", "ೂ", "ೃ", "ೄ", "ೢ", "ೣ", "ೆ", "ೇ", "ೈ", "ೊ", "ೋ", "ೌ"),
-                "other_marks" => array("ಂ", "ಃ", "ँ"),
-                "virama" => array("್"),
-                "consonants" => array("ಕ", "ಖ", "ಗ", "ಘ", "ಙ", "ಚ", "ಛ", "ಜ", "ಝ", "ಞ", "ಟ", "ಠ", "ಡ", "ಢ", "ಣ", "ತ", "ಥ", "ದ", "ಧ", "ನ", "ಪ", "ಫ", "ಬ", "ಭ", "ಮ", "ಯ", "ರ", "ಲ", "ವ", "ಶ", "ಷ", "ಸ", "ಹ", "ಳ", "ಕ್ಷ", "ಜ್ಞ"),
-                "symbols" => array("೦", "೧", "೨", "೩", "೪", "೫", "೬", "೭", "೮", "೯", "ಓಂ", "ಽ", "।", "॥"),
-                "other" => array("", "", "", "", "", "", "ಫ", "", "ಱ")
-            ),
+        /* Malayalam
+         * ---------
+         * Sanskrit-complete.
+         */
+        "malayalam" => array(
+            "vowels" => array("അ", "ആ", "ഇ", "ഈ", "ഉ", "ഊ", "ഋ", "ൠ", "ഌ", "ൡ", "എ", "ഏ", "ഐ", "ഒ", "ഓ", "ഔ"),
+            "vowel_marks" => array("ാ", "ി", "ീ", "ു", "ൂ", "ൃ", "ൄ", "ൢ", "ൣ", "െ", "േ", "ൈ", "ൊ", "ോ", "ൌ"),
+            "other_marks" => array("ം", "ഃ", "ँ"),
+            "virama" => array("്"),
+            "consonants" => array("ക", "ഖ", "ഗ", "ഘ", "ങ", "ച", "ഛ", "ജ", "ഝ", "ഞ", "ട", "ഠ", "ഡ", "ഢ", "ണ", "ത", "ഥ", "ദ", "ധ", "ന", "പ", "ഫ", "ബ", "ഭ", "മ", "യ", "ര", "ല", "വ", "ശ", "ഷ", "സ", "ഹ", "ള", "ക്ഷ", "ജ്ഞ"),
+            "symbols" => array("൦", "൧", "൨", "൩", "൪", "൫", "൬", "൭", "൮", "൯", "ഓം", "ഽ", "।", "॥"),
+            "other" => array("", "", "", "", "", "", "", "", "റ")
+        ),
 
-            /* Malayalam
-             * ---------
-             * Sanskrit-complete.
-             */
-            "malayalam" => array(
-                "vowels" => array("അ", "ആ", "ഇ", "ഈ", "ഉ", "ഊ", "ഋ", "ൠ", "ഌ", "ൡ", "എ", "ഏ", "ഐ", "ഒ", "ഓ", "ഔ"),
-                "vowel_marks" => array("ാ", "ി", "ീ", "ു", "ൂ", "ൃ", "ൄ", "ൢ", "ൣ", "െ", "േ", "ൈ", "ൊ", "ോ", "ൌ"),
-                "other_marks" => array("ം", "ഃ", "ँ"),
-                "virama" => array("്"),
-                "consonants" => array("ക", "ഖ", "ഗ", "ഘ", "ങ", "ച", "ഛ", "ജ", "ഝ", "ഞ", "ട", "ഠ", "ഡ", "ഢ", "ണ", "ത", "ഥ", "ദ", "ധ", "ന", "പ", "ഫ", "ബ", "ഭ", "മ", "യ", "ര", "ല", "വ", "ശ", "ഷ", "സ", "ഹ", "ള", "ക്ഷ", "ജ്ഞ"),
-                "symbols" => array("൦", "൧", "൨", "൩", "൪", "൫", "൬", "൭", "൮", "൯", "ഓം", "ഽ", "।", "॥"),
-                "other" => array("", "", "", "", "", "", "", "", "റ")
-            ),
+        /* Oriya
+         * -----
+         * Sanskrit-complete.
+         */
+        "oriya" => array(
+            "vowels" => array("ଅ", "ଆ", "ଇ", "ଈ", "ଉ", "ଊ", "ଋ", "ୠ", "ଌ", "ୡ", "", "ଏ", "ଐ", "", "ଓ", "ଔ"),
+            "vowel_marks" => array("ା", "ି", "ୀ", "ୁ", "ୂ", "ୃ", "ୄ", "ୢ", "ୣ", "", "େ", "ୈ", "", "ୋ", "ୌ"),
+            "other_marks" => array("ଂ", "ଃ", "ଁ"),
+            "virama" => array("୍"),
+            "consonants" => array("କ", "ଖ", "ଗ", "ଘ", "ଙ", "ଚ", "ଛ", "ଜ", "ଝ", "ଞ", "ଟ", "ଠ", "ଡ", "ଢ", "ଣ", "ତ", "ଥ", "ଦ", "ଧ", "ନ", "ପ", "ଫ", "ବ", "ଭ", "ମ", "ଯ", "ର", "ଲ", "ଵ", "ଶ", "ଷ", "ସ", "ହ", "ଳ", "କ୍ଷ", "ଜ୍ଞ"),
+            "symbols" => array("୦", "୧", "୨", "୩", "୪", "୫", "୬", "୭", "୮", "୯", "ଓଂ", "ଽ", "।", "॥"),
+            "other" => array("", "", "", "", "ଡ", "ଢ", "", "ଯ", "")
+        ),
 
-            /* Oriya
-             * -----
-             * Sanskrit-complete.
-             */
-            "oriya" => array(
-                "vowels" => array("ଅ", "ଆ", "ଇ", "ଈ", "ଉ", "ଊ", "ଋ", "ୠ", "ଌ", "ୡ", "", "ଏ", "ଐ", "", "ଓ", "ଔ"),
-                "vowel_marks" => array("ା", "ି", "ୀ", "ୁ", "ୂ", "ୃ", "ୄ", "ୢ", "ୣ", "", "େ", "ୈ", "", "ୋ", "ୌ"),
-                "other_marks" => array("ଂ", "ଃ", "ଁ"),
-                "virama" => array("୍"),
-                "consonants" => array("କ", "ଖ", "ଗ", "ଘ", "ଙ", "ଚ", "ଛ", "ଜ", "ଝ", "ଞ", "ଟ", "ଠ", "ଡ", "ଢ", "ଣ", "ତ", "ଥ", "ଦ", "ଧ", "ନ", "ପ", "ଫ", "ବ", "ଭ", "ମ", "ଯ", "ର", "ଲ", "ଵ", "ଶ", "ଷ", "ସ", "ହ", "ଳ", "କ୍ଷ", "ଜ୍ଞ"),
-                "symbols" => array("୦", "୧", "୨", "୩", "୪", "୫", "୬", "୭", "୮", "୯", "ଓଂ", "ଽ", "।", "॥"),
-                "other" => array("", "", "", "", "ଡ", "ଢ", "", "ଯ", "")
-            ),
+        /* Tamil
+         * -----
+         * Missing R/RR/lR/lRR vowel marks and voice/aspiration distinctions.
+         * The most incomplete of the Sanskrit schemes here.
+         */
+        "tamil" => array(
+            "vowels" => array("அ", "ஆ", "இ", "ஈ", "உ", "ஊ", "", "", "", "", "எ", "ஏ", "ஐ", "ஒ", "ஓ", "ஔ"),
+            "vowel_marks" => array("ா", "ி", "ீ", "ு", "ூ", "", "", "", "", "ெ", "ே", "ை", "ொ", "ோ", "ௌ"),
+            "other_marks" => array("ஂ", "ஃ", ""),
+            "virama" => array("்"),
+            "consonants" => array("க", "க", "க", "க", "ங", "ச", "ச", "ஜ", "ச", "ஞ", "ட", "ட", "ட", "ட", "ண", "த", "த", "த", "த", "ந", "ப", "ப", "ப", "ப", "ம", "ய", "ர", "ல", "வ", "ஶ", "ஷ", "ஸ", "ஹ", "ள", "க்ஷ", "ஜ்ஞ"),
+            "symbols" => array("௦", "௧", "௨", "௩", "௪", "௫", "௬", "௭", "௮", "௯", "ௐ", "ऽ", "।", "॥"),
+            "other" => array("", "", "", "", "", "", "", "", "ற")
+        ),
 
-            /* Tamil
-             * -----
-             * Missing R/RR/lR/lRR vowel marks and voice/aspiration distinctions.
-             * The most incomplete of the Sanskrit schemes here.
-             */
-            "tamil" => array(
-                "vowels" => array("அ", "ஆ", "இ", "ஈ", "உ", "ஊ", "", "", "", "", "எ", "ஏ", "ஐ", "ஒ", "ஓ", "ஔ"),
-                "vowel_marks" => array("ா", "ி", "ீ", "ு", "ூ", "", "", "", "", "ெ", "ே", "ை", "ொ", "ோ", "ௌ"),
-                "other_marks" => array("ஂ", "ஃ", ""),
-                "virama" => array("்"),
-                "consonants" => array("க", "க", "க", "க", "ங", "ச", "ச", "ஜ", "ச", "ஞ", "ட", "ட", "ட", "ட", "ண", "த", "த", "த", "த", "ந", "ப", "ப", "ப", "ப", "ம", "ய", "ர", "ல", "வ", "ஶ", "ஷ", "ஸ", "ஹ", "ள", "க்ஷ", "ஜ்ஞ"),
-                "symbols" => array("௦", "௧", "௨", "௩", "௪", "௫", "௬", "௭", "௮", "௯", "ௐ", "ऽ", "।", "॥"),
-                "other" => array("", "", "", "", "", "", "", "", "ற")
-            ),
+        /* Telugu
+         * ------
+         * Sanskrit-complete.
+         */
+        "telugu" => array(
+            "vowels" => array("అ", "ఆ", "ఇ", "ఈ", "ఉ", "ఊ", "ఋ", "ౠ", "ఌ", "ౡ", "ఎ", "ఏ", "ఐ", "ఒ", "ఓ", "ఔ"),
+            "vowel_marks" => array("ా", "ి", "ీ", "ు", "ూ", "ృ", "ౄ", "ౢ", "ౣ", "ె", "ే", "ై", "ొ", "ో", "ౌ"),
+            "other_marks" => array("ం", "ః", "ఁ"),
+            "virama" => array("్"),
+            "consonants" => array("క", "ఖ", "గ", "ఘ", "ఙ", "చ", "ఛ", "జ", "ఝ", "ఞ", "ట", "ఠ", "డ", "ఢ", "ణ", "త", "థ", "ద", "ధ", "న", "ప", "ఫ", "బ", "భ", "మ", "య", "ర", "ల", "వ", "శ", "ష", "స", "హ", "ళ", "క్ష", "జ్ఞ"),
+            "symbols" => array("౦", "౧", "౨", "౩", "౪", "౫", "౬", "౭", "౮", "౯", "ఓం", "ఽ", "।", "॥"),
+            "other" => array("", "", "", "", "", "", "", "", "ఱ")
+        ),
 
-            /* Telugu
-             * ------
-             * Sanskrit-complete.
-             */
-            "telugu" => array(
-                "vowels" => array("అ", "ఆ", "ఇ", "ఈ", "ఉ", "ఊ", "ఋ", "ౠ", "ఌ", "ౡ", "ఎ", "ఏ", "ఐ", "ఒ", "ఓ", "ఔ"),
-                "vowel_marks" => array("ా", "ి", "ీ", "ు", "ూ", "ృ", "ౄ", "ౢ", "ౣ", "ె", "ే", "ై", "ొ", "ో", "ౌ"),
-                "other_marks" => array("ం", "ః", "ఁ"),
-                "virama" => array("్"),
-                "consonants" => array("క", "ఖ", "గ", "ఘ", "ఙ", "చ", "ఛ", "జ", "ఝ", "ఞ", "ట", "ఠ", "డ", "ఢ", "ణ", "త", "థ", "ద", "ధ", "న", "ప", "ఫ", "బ", "భ", "మ", "య", "ర", "ల", "వ", "శ", "ష", "స", "హ", "ళ", "క్ష", "జ్ఞ"),
-                "symbols" => array("౦", "౧", "౨", "౩", "౪", "౫", "౬", "౭", "౮", "౯", "ఓం", "ఽ", "।", "॥"),
-                "other" => array("", "", "", "", "", "", "", "", "ఱ")
-            ),
+        /* International Alphabet of Sanskrit Transliteration
+         * --------------------------------------------------
+         * The most "professional" Sanskrit romanization scheme.
+         */
+        "iast" => array(
+            "vowels" => array("a", "ā", "i", "ī", "u", "ū", "ṛ", "ṝ", "ḷ", "ḹ", "", "e", "ai", "", "o", "au"),
+            "other_marks" => array("ṃ", "ḥ", "~"),
+            "virama" => array(""),
+            "consonants" => array("k", "kh", "g", "gh", "ṅ", "c", "ch", "j", "jh", "ñ", "ṭ", "ṭh", "ḍ", "ḍh", "ṇ", "t", "th", "d", "dh", "n", "p", "ph", "b", "bh", "m", "y", "r", "l", "v", "ś", "ṣ", "s", "h", "ḻ", "kṣ", "jñ"),
+            "symbols" => array("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "oṃ", "'", "।", "॥")
+        ),
 
-            /* International Alphabet of Sanskrit Transliteration
-             * --------------------------------------------------
-             * The most "professional" Sanskrit romanization scheme.
-             */
-            "iast" => array(
-                "vowels" => array("a", "ā", "i", "ī", "u", "ū", "ṛ", "ṝ", "ḷ", "ḹ", "", "e", "ai", "", "o", "au"),
-                "other_marks" => array("ṃ", "ḥ", "~"),
-                "virama" => array(""),
-                "consonants" => array("k", "kh", "g", "gh", "ṅ", "c", "ch", "j", "jh", "ñ", "ṭ", "ṭh", "ḍ", "ḍh", "ṇ", "t", "th", "d", "dh", "n", "p", "ph", "b", "bh", "m", "y", "r", "l", "v", "ś", "ṣ", "s", "h", "ḻ", "kṣ", "jñ"),
-                "symbols" => array("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "oṃ", "'", "।", "॥")
-            ),
+        /* ITRANS
+         * ------
+         * One of the first romanization schemes -- and one of the most
+         * complicated. For alternate forms, see the "allAlternates" variable
+         * below.
+         *
+         * '_' is a "null" letter, which allows adjacent vowels.
+         */
+        "itrans" => array(
+            "vowels" => array("a", "A", "i", "I", "u", "U", "RRi", "RRI", "LLi", "LLI", "", "e", "ai", "", "o", "au"),
+            "other_marks" => array("M", "H", ".N"),
+            "virama" => array(""),
+            "consonants" => array("k", "kh", "g", "gh", "~N", "ch", "Ch", "j", "jh", "~n", "T", "Th", "D", "Dh", "N", "t", "th", "d", "dh", "n", "p", "ph", "b", "bh", "m", "y", "r", "l", "v", "sh", "Sh", "s", "h", "L", "kSh", "j~n"),
+            "symbols" => array("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "OM", ".a", "|", "||"),
+            "candra" => array(".c"),
+            "zwj" => array("{}"),
+            "skip" => "_",
+            "accent" => array("\\'", "\\_"),
+            "combo_accent" => array("\\'H", "\\_H", "\\'M", "\\_M"),
+            "other" => array("q", "K", "G", "z", ".D", ".Dh", "f", "Y", "R")
+        ),
 
-            /* ITRANS
-             * ------
-             * One of the first romanization schemes -- and one of the most
-             * complicated. For alternate forms, see the "allAlternates" variable
-             * below.
-             *
-             * '_' is a "null" letter, which allows adjacent vowels.
-             */
-            "itrans" => array(
-                "vowels" => array("a", "A", "i", "I", "u", "U", "RRi", "RRI", "LLi", "LLI", "", "e", "ai", "", "o", "au"),
-                "other_marks" => array("M", "H", ".N"),
-                "virama" => array(""),
-                "consonants" => array("k", "kh", "g", "gh", "~N", "ch", "Ch", "j", "jh", "~n", "T", "Th", "D", "Dh", "N", "t", "th", "d", "dh", "n", "p", "ph", "b", "bh", "m", "y", "r", "l", "v", "sh", "Sh", "s", "h", "L", "kSh", "j~n"),
-                "symbols" => array("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "OM", ".a", "|", "||"),
-                "candra" => array(".c"),
-                "zwj" => array("{}"),
-                "skip" => "_",
-                "accent" => array("\\'", "\\_"),
-                "combo_accent" => array("\\'H", "\\_H", "\\'M", "\\_M"),
-                "other" => array("q", "K", "G", "z", ".D", ".Dh", "f", "Y", "R")
-            ),
+        /* Harvard-Kyoto
+         * -------------
+         * A simple 1:1 mapping.
+         */
+        "hk" => array(
+            "vowels" => array("a", "A", "i", "I", "u", "U", "R", "RR", "lR", "lRR", "", "e", "ai", "", "o", "au"),
+            "other_marks" => array("M", "H", "~",),
+            "virama" => array(""),
+            "consonants" => array("k", "kh", "g", "gh", "G", "c", "ch", "j", "jh", "J", "T", "Th", "D", "Dh", "N", "t", "th", "d", "dh", "n", "p", "ph", "b", "bh", "m", "y", "r", "l", "v", "z", "S", "s", "h", "L", "kS", "jJ"),
+            "symbols" => array("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "OM", "'", "|", "||")
+        ),
 
-            /* Harvard-Kyoto
-             * -------------
-             * A simple 1:1 mapping.
-             */
-            "hk" => array(
-                "vowels" => array("a", "A", "i", "I", "u", "U", "R", "RR", "lR", "lRR", "", "e", "ai", "", "o", "au"),
-                "other_marks" => array("M", "H", "~",),
-                "virama" => array(""),
-                "consonants" => array("k", "kh", "g", "gh", "G", "c", "ch", "j", "jh", "J", "T", "Th", "D", "Dh", "N", "t", "th", "d", "dh", "n", "p", "ph", "b", "bh", "m", "y", "r", "l", "v", "z", "S", "s", "h", "L", "kS", "jJ"),
-                "symbols" => array("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "OM", "'", "|", "||")
-            ),
+        /* National Library at Kolkata
+         * ---------------------------
+         * Apart from using "ē" and "ō" instead of "e" and "o", this scheme is
+         * identical to IAST. ṝ, ḷ, and ḹ are not part of the scheme proper.
+         *
+         * This is defined further below.
+         */
 
-            /* National Library at Kolkata
-             * ---------------------------
-             * Apart from using "ē" and "ō" instead of "e" and "o", this scheme is
-             * identical to IAST. ṝ, ḷ, and ḹ are not part of the scheme proper.
-             *
-             * This is defined further below.
-             */
+        /* Sanskrit Library Phonetic Basic
+         * -------------------------------
+         * With one ASCII letter per phoneme, this is the tersest transliteration
+         * scheme in use today and is especially suited to computer processing.
+         */
+        "slp1" => array(
+            "vowels" => array("a", "A", "i", "I", "u", "U", "f", "F", "x", "X", "", "e", "E", "", "o", "O"),
+            "other_marks" => array("M", "H", "~"),
+            "virama" => array(""),
+            "consonants" => array("k", "K", "g", "G", "N", "c", "C", "j", "J", "Y", "w", "W", "q", "Q", "R", "t", "T", "d", "D", "n", "p", "P", "b", "B", "m", "y", "r", "l", "v", "S", "z", "s", "h", "L", "kz", "jY"),
+            "symbols" => array("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "oM", "'", ".", "..")
+        ),
 
-            /* Sanskrit Library Phonetic Basic
-             * -------------------------------
-             * With one ASCII letter per phoneme, this is the tersest transliteration
-             * scheme in use today and is especially suited to computer processing.
-             */
-            "slp1" => array(
-                "vowels" => array("a", "A", "i", "I", "u", "U", "f", "F", "x", "X", "", "e", "E", "", "o", "O"),
-                "other_marks" => array("M", "H", "~"),
-                "virama" => array(""),
-                "consonants" => array("k", "K", "g", "G", "N", "c", "C", "j", "J", "Y", "w", "W", "q", "Q", "R", "t", "T", "d", "D", "n", "p", "P", "b", "B", "m", "y", "r", "l", "v", "S", "z", "s", "h", "L", "kz", "jY"),
-                "symbols" => array("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "oM", "'", ".", "..")
-            ),
+        /* Velthuis
+         * --------
+         * A case-insensitive Sanskrit encoding.
+         */
+        "velthuis" => array(
+            "vowels" => array("a", "aa", "i", "ii", "u", "uu", ".r", ".rr", ".li", ".ll", "", "e", "ai", "", "o", "au"),
+            "other_marks" => array(".m", ".h", ""),
+            "virama" => array(""),
+            "consonants" => array("k", "kh", "g", "gh", "\"n", "c", "ch", "j", "jh", "~n", ".t", ".th", ".d", ".d", ".n", "t", "th", "d", "dh", "n", "p", "ph", "b", "bh", "m", "y", "r", "l", "v", "~s", ".s", "s", "h", "L", "k.s", "j~n"),
+            "symbols" => array("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "o.m", "'", "|", "||")
+        ),
 
-            /* Velthuis
-             * --------
-             * A case-insensitive Sanskrit encoding.
-             */
-            "velthuis" => array(
-                "vowels" => array("a", "aa", "i", "ii", "u", "uu", ".r", ".rr", ".li", ".ll", "", "e", "ai", "", "o", "au"),
-                "other_marks" => array(".m", ".h", ""),
-                "virama" => array(""),
-                "consonants" => array("k", "kh", "g", "gh", "\"n", "c", "ch", "j", "jh", "~n", ".t", ".th", ".d", ".d", ".n", "t", "th", "d", "dh", "n", "p", "ph", "b", "bh", "m", "y", "r", "l", "v", "~s", ".s", "s", "h", "L", "k.s", "j~n"),
-                "symbols" => array("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "o.m", "'", "|", "||")
-            ),
+        /* WX
+         * --
+         * As terse as SLP1.
+         */
+        "wx" => array(
+            "vowels" => array("a", "A", "i", "I", "u", "U", "q", "Q", "L", "", "", "e", "E", "", "o", "O"),
+            "other_marks" => array("M", "H", "z"),
+            "virama" => array(""),
+            "consonants" => array("k", "K", "g", "G", "f", "c", "C", "j", "J", "F", "t", "T", "d", "D", "N", "w", "W", "x", "X", "n", "p", "P", "b", "B", "m", "y", "r", "l", "v", "S", "R", "s", "h", "", "kR", "jF"),
+            "symbols" => array("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "oM", "'", "|", "||")
+        ),
+    );
 
-            /* WX
-             * --
-             * As terse as SLP1.
-             */
-            "wx" => array(
-                "vowels" => array("a", "A", "i", "I", "u", "U", "q", "Q", "L", "", "", "e", "E", "", "o", "O"),
-                "other_marks" => array("M", "H", "z"),
-                "virama" => array(""),
-                "consonants" => array("k", "K", "g", "G", "f", "c", "C", "j", "J", "F", "t", "T", "d", "D", "N", "w", "W", "x", "X", "n", "p", "P", "b", "B", "m", "y", "r", "l", "v", "S", "R", "s", "h", "", "kR", "jF"),
-                "symbols" => array("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "oM", "'", "|", "||")
-            ),
-        );
+    // Set of names of Roman schemes.
+    private $romanSchemes = array();
 
-        $this->romanSchemes = array();
+    // Map of alternate encodings.
+    private $allAlternates = array(
+        "itrans" => array(
+            "A" => array("aa"),
+            "I" => array("ii", "ee"),
+            "U" => array("uu", "oo"),
+            "RRi" => array("R^i"),
+            "RRI" => array("R^I"),
+            "LLi" => array("L^i"),
+            "LLI" => array("L^I"),
+            "M" => array(".m", ".n"),
+            "~N" => array("N^"),
+            "ch" => array("c"),
+            "Ch" => array("C", "chh"),
+            "~n" => array("JN"),
+            "v" => array("w"),
+            "Sh" => array("S", "shh"),
+            "kSh" => array("kS", "x"),
+            "j~n" => array("GY", "dny"),
+            "OM" => array("AUM"),
+            "\\_" => array("\\`"),
+            "\\_H" => array("\\`H"),
+            "\\'M" => array("\\'.m", "\\'.n"),
+            "\\_M" => array("\\_.m", "\\_.n", "\\`M", "\\`.m", "\\`.n"),
+            ".a" => array("~"),
+            "|" => array("."),
+            "||" => array(".."),
+            "z" => array("J")
+        )
+    );
 
-        $this->allAlternates = array(
-            "itrans" => array(
-                "A" => array("aa"),
-                "I" => array("ii", "ee"),
-                "U" => array("uu", "oo"),
-                "RRi" => array("R^i"),
-                "RRI" => array("R^I"),
-                "LLi" => array("L^i"),
-                "LLI" => array("L^I"),
-                "M" => array(".m", ".n"),
-                "~N" => array("N^"),
-                "ch" => array("c"),
-                "Ch" => array("C", "chh"),
-                "~n" => array("JN"),
-                "v" => array("w"),
-                "Sh" => array("S", "shh"),
-                "kSh" => array("kS", "x"),
-                "j~n" => array("GY", "dny"),
-                "OM" => array("AUM"),
-                "\\_" => array("\\`"),
-                "\\_H" => array("\\`H"),
-                "\\'M" => array("\\'.m", "\\'.n"),
-                "\\_M" => array("\\_.m", "\\_.n", "\\`M", "\\`.m", "\\`.n"),
-                ".a" => array("~"),
-                "|" => array("."),
-                "||" => array(".."),
-                "z" => array("J")
-            )
-        );
+    // Object cache.
+    private $cache = array();
 
-        $this->cache = array();
+    function __construct() {
+        $this->convertUnicodeConstants($this->schemes['devanagari']['zwj']);
+        $this->convertUnicodeConstants($this->schemes['devanagari']['accent']);
+        $this->setUpSchemes();
     }
 
-    function __construct () {
-        $this->initializeVariables();
-        $this->setUpSchemes();
+    /**
+     * Work around the lack of Unicode constants in PHP literal strings.
+     *
+     * @param $values  array of Unicode character constants
+     */
+    private function convertUnicodeConstants(&$values) {
+        $values = json_decode('["' . implode('","', $values) . '"]');
     }
 
     /**
@@ -562,7 +564,7 @@ class Sanscript {
                 $skippingTrans = $skippingSGML || $toggledTrans;
                 if (isset($letters[$token]) && !$skippingTrans) {
                     if ($toRoman) {
-                      $buf[] = $letters[$token];
+                        $buf[] = $letters[$token];
                     } else {
                         // Handle the implicit vowel. Ignore 'a' and force
                         // vowels to appear as marks if we've just seen a
@@ -730,11 +732,10 @@ class Sanscript {
  *
  * @see http://us.php.net/ChangeLog-5.php
  */
-function mb_substr_fixed ($str , $start, $length, $encoding) {
+function mb_substr_fixed($str, $start, $length, $encoding) {
     if (version_compare(PHP_VERSION, '5.4.8', '<')) {
         return mb_substr($str, $start, is_null($length) ? mb_strlen($str) : $length, $encoding);
-    }
-    else {
+    } else {
         return mb_substr($str, $start, $length, $encoding);
     }
 }
