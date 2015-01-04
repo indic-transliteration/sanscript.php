@@ -331,7 +331,7 @@ class Sanscript {
     }
 
     /**
-     * Work around the lack of Unicode constants in PHP literal strings.
+     * Work around the lack of Unicode escape sequence decoding in PHP strings.
      *
      * @param $values  array of Unicode character constants
      */
@@ -374,7 +374,7 @@ class Sanscript {
     /**
      * Add a roman scheme to Sanscript.
      *
-     * See the comments on Sanscript.addBrahmicScheme. The "vowel_marks" field
+     * See the comments on addBrahmicScheme. The "vowel_marks" field
      * can be omitted.
      *
      * @param $name    the scheme name
