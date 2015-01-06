@@ -550,7 +550,7 @@ class Sanscript {
 
             // Match all token substrings to our map.
             for ($j = 0; $j < $maxTokenLength; $j++) {
-                $token = mb_substr_fixed($tokenBuffer, 0, $maxTokenLength - $j, 'UTF-8');
+                $token = mb_substr($tokenBuffer, 0, $maxTokenLength - $j, 'UTF-8');
 
                 if ($skippingSGML) {
                     $skippingSGML = ($token !== '>');
@@ -558,7 +558,7 @@ class Sanscript {
                     $skippingSGML = $optSkipSGML;
                 } else if ($token === '##') {
                     $toggledTrans = !$toggledTrans;
-                    $tokenBuffer = mb_substr_fixed($tokenBuffer, 2, NULL, 'UTF-8');
+                    $tokenBuffer = mb_substr($tokenBuffer, 2, NULL, 'UTF-8');
                     break;
                 }
                 $skippingTrans = $skippingSGML || $toggledTrans;
@@ -581,7 +581,7 @@ class Sanscript {
                         }
                         $hadConsonant = isset($consonants[$token]);
                     }
-                    $tokenBuffer = mb_substr_fixed($tokenBuffer, $maxTokenLength - $j, NULL, 'UTF-8');
+                    $tokenBuffer = mb_substr($tokenBuffer, $maxTokenLength - $j, NULL, 'UTF-8');
                     break;
                 } else if ($j === $maxTokenLength - 1) {
                     if ($hadConsonant) {
@@ -591,7 +591,7 @@ class Sanscript {
                         }
                     }
                     $buf[] = $token;
-                    $tokenBuffer = mb_substr_fixed($tokenBuffer, 1, NULL, 'UTF-8');
+                    $tokenBuffer = mb_substr($tokenBuffer, 1, NULL, 'UTF-8');
                     // 'break' is redundant here, "$j == ..." is true only on
                     // the last iteration.
                 }
@@ -724,18 +724,5 @@ class Sanscript {
         } else {
             return $this->transliterateBrahmic($data, $map, $options);
         }
-    }
-}
-
-/**
- * Replacement for broken mb_substr() in PHP < 5.4.8.
- *
- * @see http://us.php.net/ChangeLog-5.php
- */
-function mb_substr_fixed($str, $start, $length, $encoding) {
-    if (version_compare(PHP_VERSION, '5.4.8', '<')) {
-        return mb_substr($str, $start, is_null($length) ? mb_strlen($str) : $length, $encoding);
-    } else {
-        return mb_substr($str, $start, $length, $encoding);
     }
 }
