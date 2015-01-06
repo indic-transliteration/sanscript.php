@@ -3,7 +3,6 @@
   "description": "Transliteration library for Sanskrit and other Indian languages.",
   "keywords": ["transliteration", "romanization", "sanskrit", "devanagari", "itrans", "iast"],
   "type": "library",
-  "homepage": "https://github.com/sanskrit/sanscript.php",
   "license": "MIT",
   "authors": [
     {

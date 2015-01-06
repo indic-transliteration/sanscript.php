@@ -5,14 +5,28 @@ Introduction
 -----------------------------
 Sanscript.php is a transliteration library for Indian languages written in PHP. It supports the most popular Indian scripts and several different romanization schemes. Although Sanscript focuses on Sanskrit transliteration, it has partial support for other languages and is easy to extend.
 
+Requirements
+-----------------------------
+Sanscript requires PHP 5.4.8 and up. PHP versions before 5.4.8 have a version of `mb_substr()` that is known to be [broken](http://us.php.net/ChangeLog-5.php). These versions will not work with Sanscript.
+
 Usage
 -----------------------------
-Sanscript is simple to use:
+Sanscript is simple to use. 
 
-    use Sanskrit\Sanscript;
+First install the [Composer](http://getcomposer.org) package manager, then install Sanscript with:
 
-    $sanscript = new Sanscript();
-    $output = $sanscript->t($input, $from, $to);
+    composer require sanskrit/sanscript
+
+then invoke Sanscript like this:
+
+```php
+<?php
+
+use Sanskrit\Sanscript;
+
+$sanscript = new Sanscript();
+$output = $sanscript->t($input, $from, $to);
+```
 
 Here, `$from` and `$to` are the names of different **schemes**. In Sanscript, the word "scheme" refers to both scripts and romanizations. These schemes are of two types:
 
@@ -79,6 +93,7 @@ Running tests
 -----------------------------
 Running tests is facilitated with Composer:
 
-    1. composer install
-    2. composer --dev update
-    3. ./vendor/bin/phpunit
+    1. cd /path/to/sanscript
+    2. composer install
+    3. composer --dev update
+    4. ./vendor/bin/phpunit
