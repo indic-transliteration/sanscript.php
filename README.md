@@ -79,6 +79,6 @@ Running tests
 -----------------------------
 Running tests is facilitated with Composer:
 
-1. composer install
-2. composer --dev update
-3. ./vendor/bin/phpunit
+    1. composer install
+    2. composer --dev update
+    3. ./vendor/bin/phpunit
