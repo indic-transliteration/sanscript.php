@@ -9,6 +9,8 @@ Usage
 -----------------------------
 Sanscript is simple to use:
 
+    use Sanskrit\Sanscript;
+
     $sanscript = new Sanscript();
     $output = $sanscript->t($input, $from, $to);
 
@@ -72,3 +74,11 @@ Adding a new scheme is simple:
     $sanscript->addRomanScheme($schemeName, $schemeData);
 
 For help in creating `$schemeData`, see the comments on the `addBrahmicScheme` and `addRomanScheme` functions.
+
+Running tests
+-----------------------------
+Running tests is facilitated with Composer:
+
+1. composer install
+2. composer --dev update
+3. ./vendor/bin/phpunit

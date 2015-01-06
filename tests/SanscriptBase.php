@@ -1,11 +1,13 @@
 <?php
 
-abstract class SanscriptBase extends PHPUnit_Framework_TestCase {
+namespace Sanskrit\Sanscript\Tests;
+use Sanskrit\Sanscript;
+
+abstract class SanscriptBase extends \PHPUnit_Framework_TestCase {
     protected $sanscript;
     protected $data;
 
     protected function setUp() {
-        include_once '../sanscript/sanscript.php';
         $this->sanscript = new Sanscript();
 
         $this->data = array(

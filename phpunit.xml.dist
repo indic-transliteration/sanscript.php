@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<phpunit bootstrap="tests/bootstrap.php" colors="true">
+  <testsuites>
+    <testsuite name="Sanscript Test Suite">
+      <file>tests/SanscriptSetup.php</file>
+      <file>tests/SanscriptTransliteration.php</file>
+      <file>tests/SanscriptDravidian.php</file>
+      <file>tests/SanscriptToggle.php</file>
+      <file>tests/SanscriptOptions.php</file>
+      <file>tests/SanscriptITRANS.php</file>
+    </testsuite>
+  </testsuites>
+</phpunit>

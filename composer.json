@@ -1,0 +1,29 @@
+{
+  "name": "sanskrit/sanscript",
+  "description": "Transliteration library for Sanskrit and other Indian languages",
+  "keywords": ["transliteration", "romanization", "sanskrit", "devanagari", "itrans", "iast"],
+  "type": "library",
+  "homepage": "https://github.com/sanskrit/sanscript.php",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Keith Morgan",
+      "email": "keith@wellebee.com",
+      "homepage": "http://wellebee.com"
+    },
+    {
+      "name": "Arun Prasad",
+      "homepage": "https://github.com/akprasad"
+    }
+  ],
+
+  "require": {
+    "php": ">=5.4.8"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "~4.0"
+  },
+  "autoload": {
+    "psr-4": {"Sanskrit\\": "src/"}
+  }
+}

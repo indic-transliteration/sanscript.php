@@ -1,6 +1,6 @@
 <?php
 
-include_once './SanscriptBase.php';
+use Sanskrit\Sanscript\Tests\SanscriptBase;
 
 class SanscriptSetup extends SanscriptBase {
 

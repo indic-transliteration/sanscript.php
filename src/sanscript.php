@@ -1,5 +1,7 @@
 <?php
 
+namespace Sanskrit;
+
 /**
  * Sanscript
  *
@@ -726,3 +728,4 @@ class Sanscript {
         }
     }
 }
+

@@ -1,4 +1,0 @@
-#!/bin/sh
-# @see http://www.phpunit.de/manual/current/en/index.html
-
-phpunit -c config.xml
