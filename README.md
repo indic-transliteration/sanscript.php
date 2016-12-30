@@ -95,5 +95,4 @@ Running tests is facilitated with Composer:
 
     1. cd /path/to/sanscript
     2. composer install
-    3. composer --dev update
-    4. ./vendor/bin/phpunit
+    3. ./vendor/bin/phpunit
