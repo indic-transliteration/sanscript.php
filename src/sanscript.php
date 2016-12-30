@@ -335,7 +335,7 @@ class Sanscript {
     /**
      * Work around the lack of Unicode escape sequence decoding in PHP strings.
      *
-     * @param $values  array of Unicode character constants
+     * @param array $values array of Unicode character constants
      */
     private function convertUnicodeConstants(&$values) {
         $values = json_decode('["' . implode('","', $values) . '"]');
@@ -344,8 +344,8 @@ class Sanscript {
     /**
      * Check whether the given scheme encodes romanized Sanskrit.
      *
-     * @param $name  the scheme name
-     * @return       boolean
+     * @param string $name the scheme name
+     * @return boolean
      */
     public function isRomanScheme($name) {
         return isset($this->romanSchemes[$name]);
@@ -365,9 +365,9 @@ class Sanscript {
      * You can use whatever group names you like, but for the best results,
      * you should use the same group names that Sanscript does.
      *
-     * @param $name    the scheme name
-     * @param $scheme  the scheme data itself. This should be constructed as
-     *                 described above.
+     * @param string $name the scheme name
+     * @param array $scheme the scheme data itself. This should be constructed
+     * as described above.
      */
     public function addBrahmicScheme($name, &$scheme) {
         $this->schemes[$name] = $scheme;
@@ -376,11 +376,11 @@ class Sanscript {
     /**
      * Add a roman scheme to Sanscript.
      *
-     * See the comments on addBrahmicScheme. The "vowel_marks" field
-     * can be omitted.
+     * See the comments on addBrahmicScheme. The "vowel_marks" field can be
+     * omitted.
      *
-     * @param $name    the scheme name
-     * @param $scheme  the scheme data itself
+     * @param string $name the scheme name
+     * @param array $scheme the scheme data itself
      */
     public function addRomanScheme($name, &$scheme) {
         if (!isset($scheme['vowel_marks'])) {
@@ -393,8 +393,8 @@ class Sanscript {
     /**
      * Create a deep copy of an object, for certain kinds of objects.
      *
-     * @param $scheme  the scheme to copy
-     * @return         the copy
+     * @param array $scheme the scheme to copy
+     * @return array the copy
      */
     private function cheapCopy(&$scheme) {
         $copy = array();
@@ -435,9 +435,10 @@ class Sanscript {
      * Create a map from every character in `from` to its partner in `to`.
      * Also, store any "marks" that `from` might have.
      *
-     * @param $from     input scheme
-     * @param $to       output scheme
-     * @param $options  scheme options
+     * @param string $from input scheme
+     * @param string $to output scheme
+     * @param array $options scheme options
+     * @return array the map
      */
     private function makeMap($from, $to, &$options) {
         $consonants = array();
@@ -507,10 +508,10 @@ class Sanscript {
     /**
      * Transliterate from a romanized script.
      *
-     * @param $data     the string to transliterate
-     * @param $map      map data generated from makeMap()
-     * @param $options  transliteration options
-     * @return          the finished string
+     * @param string $data the string to transliterate
+     * @param array $map map data generated from makeMap()
+     * @param array $options transliteration options
+     * @return string the finished string
      */
     private function transliterateRoman($data, &$map, &$options) {
         $buf = array();
@@ -608,10 +609,10 @@ class Sanscript {
     /**
      * Transliterate from a Brahmic script.
      *
-     * @param $data     the string to transliterate
-     * @param $map      map data generated from makeMap()
-     * @param $options  transliteration options
-     * @return          the finished string
+     * @param string $data the string to transliterate
+     * @param array $map map data generated from makeMap()
+     * @param array $options transliteration options
+     * @return string the finished string
      */
     private function transliterateBrahmic($data, &$map, &$options) {
         $buf = array();
@@ -675,11 +676,11 @@ class Sanscript {
     /**
      * Transliterate from one script to another.
      *
-     * @param $data     the string to transliterate
-     * @param $from     the source script
-     * @param $to       the destination script
-     * @param $options  transliteration options
-     * @return          the finished string
+     * @param string $data the string to transliterate
+     * @param string $from the source script
+     * @param string $to the destination script
+     * @param array $options  transliteration options
+     * @return string the finished string
      */
     public function t($data, $from, $to, $options = NULL) {
         $options = isset($options) ? $options : array();
