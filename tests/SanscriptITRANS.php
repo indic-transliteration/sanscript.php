@@ -19,10 +19,9 @@ class SanscriptITRANS extends SanscriptBase {
 
     public function testAlternates() {
         $that = $this;
-        $sanscript = $this->sanscript;
-        $f = function($itrans1, $itrans2, $description) use ($that, $sanscript) {
-            $dev1 = $sanscript->t($itrans1, 'itrans', 'devanagari');
-            $dev2 = $sanscript->t($itrans2, 'itrans', 'devanagari');
+        $f = function($itrans1, $itrans2, $description) use ($that) {
+            $dev1 = $that->sanscript->t($itrans1, 'itrans', 'devanagari');
+            $dev2 = $that->sanscript->t($itrans2, 'itrans', 'devanagari');
             $that->assertEquals($dev2, $dev1, $description);
         };
 

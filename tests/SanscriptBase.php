@@ -163,9 +163,8 @@ abstract class SanscriptBase extends \PHPUnit_Framework_TestCase {
      */
     protected function transHelper($from, $to, $options = NULL) {
         $that = $this;
-        $sanscript = $this->sanscript;
-        return function($input, $output, $description = '') use ($that, $sanscript, $from, $to, $options) {
-            $that->assertEquals($output, $sanscript->t($input, $from, $to, $options), $description);
+        return function($input, $output, $description = '') use ($that, $from, $to, $options) {
+            $that->assertEquals($output, $that->sanscript->t($input, $from, $to, $options), $description);
         };
     }
 }
